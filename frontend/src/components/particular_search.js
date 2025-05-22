@@ -23,184 +23,293 @@ const CustomerSearch = () => {
       setLoading(true);
       setError(null);
       
-      // FastAPI routes for your second ADK agent
-      // Change these URLs to match your actual deployment
-      const BASE_URL = 'http://your-second-adk-agent-url';
+      // API configurations
+      const headers = {
+        "Content-Type": "application/json"
+      };
+      const BASE_URL = "";
+      // Create a session for the AML monitoring system
+      const app_name = "root_agent"; // Using fixed value based on your test script
+      const user_id = "user_" + Date.now(); // Generate unique user ID
+      const session_id = "session_" + Date.now(); // Generate unique session ID
       
-      // In production, use actual API calls like these:
-      /*
-      // Get all customer data in parallel for efficiency
-      const [
-        customerProfileResponse,
-        transactionsResponse,
-        locationHistoryResponse,
-        riskFactorsResponse
-      ] = await Promise.all([
-        fetch(`${BASE_URL}/api/customer/${customerId}/profile`),
-        fetch(`${BASE_URL}/api/customer/${customerId}/transactions`),
-        fetch(`${BASE_URL}/api/customer/${customerId}/locations`),
-        fetch(`${BASE_URL}/api/customer/${customerId}/risk-factors`)
-      ]);
+      // Create session
+      const sessionUrl = `${BASE_URL}/apps/${app_name}/users/${user_id}/sessions/${session_id}`;
+      const sessionBody = { "additionalProp1": {} };
       
-      // Check if customer exists
-      if (!customerProfileResponse.ok) {
-        throw new Error(`Customer with ID ${customerId} not found`);
+      console.log("Creating session...");
+      const sessionResponse = await fetch(sessionUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(sessionBody)
+      });
+
+      if (!sessionResponse.ok) {
+        throw new Error(`Failed to create session: ${sessionResponse.status}`);
       }
       
-      // Parse the JSON responses
-      const customerDetails = await customerProfileResponse.json();
-      const transactions = await transactionsResponse.json();
-      const locations = await locationHistoryResponse.json();
-      const risks = await riskFactorsResponse.json();
+      const sessionData = await sessionResponse.json();
+      console.log("Session created successfully:", sessionData);
       
-      setCustomerData(customerDetails);
-      setTransactionHistory(transactions);
-      setLocationHistory(locations);
-      setRiskFactors(risks);
-      */
+      // Send customer ID to the AML agent
+      const runUrl = `${BASE_URL}/run`;
+      const runData = {
+        "app_name": app_name,
+        "user_id": user_id,
+        "session_id": session_id,
+        "new_message": {
+          "role": "user",
+          "parts": [{
+            "text": customerId
+          }]
+        },
+        "streaming": false
+      };
       
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      console.log("Sending customer ID for analysis...");
+      const runResponse = await fetch(runUrl, {
+        method: 'POST',
+        headers: headers,
+        body: JSON.stringify(runData)
+      });
       
-      // Check if customer exists (for demo purposes)
-      if (customerId === 'C10048' || customerId === 'C10082' || customerId.toLowerCase() === 'c10045') {
-        // Placeholder customer data based on screenshot
-        const customerDetails = {
-          customerId: customerId.toUpperCase(),
-          customerName: customerId === 'C10048' ? 'Raju Sharma' : 
-                        customerId === 'C10082' ? 'Hans Mueller' : 'Raju Sharma',
-          email: customerId === 'C10048' ? 'raju.sharma@gmail.com' : 
-                customerId === 'C10082' ? 'hans.mueller@gmail.com' : 'raju.sharma@gmail.com',
-          riskScore: customerId === 'C10048' ? 95 : 
-                    customerId === 'C10082' ? 81 : 95,
-          accountCreationDate: '2022-01-15',
-          lastActivity: '2023-05-27',
-          totalTransactions: customerId === 'C10048' ? 47 : 
-                            customerId === 'C10082' ? 32 : 24,
-          averageTransactionAmount: customerId === 'C10048' ? 8500 : 
-                                   customerId === 'C10082' ? 7200 : 6700
-        };
-        
-        // Placeholder transaction history
-        const transactions = [
-          {
-            transactionId: 'TX78901',
-            date: '2023-05-27T09:15:00.000Z',
-            amount: 17000,
-            type: 'Outgoing',
-            recipientId: 'C10090',
-            recipientName: 'Michael Brown',
-            location: 'New York'
-          },
-          {
-            transactionId: 'TX78902',
-            date: '2023-05-27T10:30:00.000Z',
-            amount: 15000,
-            type: 'Outgoing',
-            recipientId: 'C10046',
-            recipientName: 'Emma Wilson',
-            location: 'Los Angeles'
-          },
-          {
-            transactionId: 'TX78905',
-            date: '2023-05-26T14:20:00.000Z',
-            amount: 12500,
-            type: 'Incoming',
-            senderId: 'C10047',
-            senderName: 'Mohammad Ali Patel',
-            location: 'Chicago'
-          },
-          {
-            transactionId: 'TX78910',
-            date: '2023-05-25T16:45:00.000Z',
-            amount: 9800,
-            type: 'Outgoing',
-            recipientId: 'C10043',
-            recipientName: 'David Cooper',
-            location: 'Miami'
-          },
-          {
-            transactionId: 'TX78915',
-            date: '2023-05-24T11:30:00.000Z',
-            amount: 7500,
-            type: 'Incoming',
-            senderId: 'C10083',
-            senderName: 'Sofia Lindberg',
-            location: 'New York'
-          }
-        ];
-        
-        // Placeholder location history
-        const locations = [
-          {
-            date: '2023-05-27T09:15:00.000Z',
-            location: 'New York',
-            activity: 'Transaction TX78901'
-          },
-          {
-            date: '2023-05-27T10:30:00.000Z',
-            location: 'Los Angeles',
-            activity: 'Transaction TX78902'
-          },
-          {
-            date: '2023-05-26T14:20:00.000Z',
-            location: 'Chicago',
-            activity: 'Transaction TX78905'
-          },
-          {
-            date: '2023-05-25T16:45:00.000Z',
-            location: 'Miami',
-            activity: 'Transaction TX78910'
-          },
-          {
-            date: '2023-05-24T11:30:00.000Z',
-            location: 'New York',
-            activity: 'Transaction TX78915'
-          }
-        ];
-        
-        // Placeholder risk factors
-        const risks = [
-          { 
-            factor: 'Multiple large transactions in short time period', 
-            severity: 'High',
-            description: 'Customer conducted 3 transactions over $10,000 within 48 hours'
-          },
-          { 
-            factor: 'Transactions from multiple geographic locations', 
-            severity: 'High',
-            description: 'Customer initiated transactions from 4 different cities in 5 days'
-          },
-          { 
-            factor: 'Transaction pattern deviation', 
-            severity: 'Medium',
-            description: 'Recent transaction amounts significantly higher than historical average'
-          },
-          { 
-            factor: 'Connections to high-risk entities', 
-            severity: 'Medium',
-            description: 'Transactions with 2 entities flagged in monitoring system'
-          },
-          { 
-            factor: 'Unusual transaction timing', 
-            severity: 'Low',
-            description: 'Multiple transactions conducted outside normal business hours'
-          }
-        ];
-        
-        setCustomerData(customerDetails);
-        setTransactionHistory(transactions);
-        setLocationHistory(locations);
-        setRiskFactors(risks);
-      } else {
-        setError(`No customer found with ID: ${customerId}`);
+      if (!runResponse.ok) {
+        throw new Error(`Failed to analyze customer: ${runResponse.status}`);
       }
+      
+      const analysisResult = await runResponse.json();
+      console.log("Analysis result:", analysisResult);
+      console.log(analysisResult)
+      // Process the real data from the API response
+      const processedData = processApiResultData(analysisResult, customerId);
+      
+      setCustomerData(processedData.customerDetails);
+      setTransactionHistory(processedData.transactions);
+      setLocationHistory(processedData.locations);
+      setRiskFactors(processedData.riskFactors);
       
       setLoading(false);
     } catch (err) {
       setError('Failed to fetch customer data. Please try again.');
       setLoading(false);
       console.error('Error fetching customer data:', err);
+    }
+  };
+
+  // Process API result data to extract customer details, transactions, locations, and risk factors
+  const processApiResultData = (apiResult, customerId) => {
+    // Initialize result structure
+    const result = {
+      customerDetails: null,
+      transactions: [],
+      locations: [],
+      riskFactors: []
+    };
+    
+    try {
+      // Find the report generator agent's response which contains the structured report
+      const reportGeneratorResponse = apiResult.find(item => 
+        item.author === 'report_generator_agent' && 
+        item.actions && 
+        item.actions.state_delta && 
+        item.actions.state_delta.datacollectoroutput
+      );
+      
+      if (!reportGeneratorResponse) {
+        throw new Error('No report data found in the API response');
+      }
+      
+      // Extract the report text
+      const reportText = reportGeneratorResponse.actions.state_delta.datacollectoroutput;
+      
+      // Extract customer data
+      const customerMatch = reportText.match(/Customer ID: (.*?)\\nName: (.*?)\\nAccounts: (.*?)\\nPrimary Location: (.*?)\\nContact: (.*?)(\\n|\/)/);
+      if (customerMatch) {
+        result.customerDetails = {
+          customerId: customerMatch[1].trim(),
+          customerName: customerMatch[2].trim(),
+          accounts: customerMatch[3].trim().split(', '),
+          primaryLocation: customerMatch[4].trim(),
+          contact: customerMatch[5].trim(),
+          email: customerMatch[5].split(' / ')[0].trim(),
+          phone: customerMatch[5].split(' / ')[1]?.trim() || 'N/A',
+        };
+      }
+      
+      // Extract risk score
+      const riskMatch = reportText.match(/Current Risk Score: (.*?)\\nPrevious Risk Score: (.*?)\\nThreshold: (.*?)\\n/);
+      if (riskMatch) {
+        result.customerDetails = {
+          ...result.customerDetails,
+          riskScore: parseFloat(riskMatch[1]),
+          previousRiskScore: parseFloat(riskMatch[2]),
+          riskThreshold: parseFloat(riskMatch[3])
+        };
+      }
+      
+      // Extract transaction history from function responses in the API result
+      // Find function responses for transactions
+      const functionResponses = apiResult.filter(item => 
+        item.content && 
+        item.content.parts && 
+        item.content.parts.some(part => part.functionResponse)
+      );
+      
+      // Extract detailed transaction data from function responses
+      let transactions = [];
+      functionResponses.forEach(response => {
+        response.content.parts.forEach(part => {
+          if (part.functionResponse) {
+            const fnResponse = part.functionResponse;
+            if (fnResponse.name === 'detect_large_amount_transactions' && fnResponse.response && fnResponse.response.result) {
+              // Add large amount transactions
+              fnResponse.response.result.forEach(tx => {
+                transactions.push({
+                  transactionId: tx.transaction_id,
+                  date: tx.transaction_date,
+                  amount: tx.amount,
+                  type: tx.customer_id_send === customerId ? 'Outgoing' : 'Incoming',
+                  senderId: tx.customer_id_send,
+                  recipientId: tx.customer_id_dest,
+                  senderLocation: tx.location_sender,
+                  recipientLocation: tx.location_receiver,
+                  transactionType: tx.transaction_type,
+                  riskType: tx.risk_type
+                });
+              });
+            }
+          }
+        });
+      });
+      
+      // Sort transactions by date (most recent first)
+      transactions = transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      // Get top 10 most recent transactions
+      result.transactions = transactions.slice(0, 10);
+      
+      // Extract location activity based on transactions
+      result.locations = result.transactions.map(tx => ({
+        date: tx.date,
+        location: tx.type === 'Outgoing' ? tx.recipientLocation : tx.senderLocation,
+        activity: `Transaction ${tx.transactionId} - ${tx.type}`
+      }));
+      
+      // Extract risk factors from the ANALYSIS & CONCLUSION section
+      const riskFactorsMatch = reportText.match(/Risk Factors:\n-(.*?)(?=\n\nBased on|$)/s);
+      if (riskFactorsMatch) {
+        const riskFactorsText = riskFactorsMatch[1].trim();
+        const risksList = riskFactorsText.split('\n-').map(rf => rf.trim()).filter(rf => rf);
+        
+        // Map identified risk factors from report
+        result.riskFactors = risksList.map(risk => {
+          // Determine severity based on keywords in risk description
+          let severity = 'Medium';
+          if (risk.toLowerCase().includes('high') || 
+              risk.toLowerCase().includes('significant') || 
+              risk.toLowerCase().includes('critical')) {
+            severity = 'High';
+          } else if (risk.toLowerCase().includes('low') || 
+                    risk.toLowerCase().includes('minor')) {
+            severity = 'Low';
+          }
+          
+          return {
+            factor: risk.split('.')[0],
+            severity: severity,
+            description: risk
+          };
+        });
+        
+        // Add missing risk details from the transaction patterns
+        if (result.riskFactors.length < 3) {
+          // Add pattern analysis as additional risk factors
+          const patternMatch = reportText.match(/Identified Patterns:(.*?)(?=\n\n-|$)/s);
+          if (patternMatch) {
+            const patterns = patternMatch[1].split('\n-').map(p => p.trim()).filter(p => p);
+            patterns.forEach(pattern => {
+              if (!result.riskFactors.some(rf => rf.description.includes(pattern))) {
+                result.riskFactors.push({
+                  factor: pattern.split('.')[0],
+                  severity: pattern.toLowerCase().includes('high') ? 'High' : 'Medium',
+                  description: pattern
+                });
+              }
+            });
+          }
+        }
+      }
+      
+      // If we didn't extract enough risk factors, add some default ones based on transaction data
+      if (result.riskFactors.length < 3) {
+        // Check for large transactions
+        if (result.transactions.some(tx => tx.amount > 5000)) {
+          result.riskFactors.push({
+            factor: 'Large Amount Transactions', 
+            severity: 'High',
+            description: 'Multiple transactions over $5,000 in short time period'
+          });
+        }
+        
+        // Check for multiple locations
+        const uniqueLocations = [...new Set([
+          ...result.transactions.map(tx => tx.senderLocation),
+          ...result.transactions.map(tx => tx.recipientLocation)
+        ])];
+        
+        if (uniqueLocations.length > 2) {
+          result.riskFactors.push({
+            factor: 'Multiple Location Transactions', 
+            severity: 'High',
+            description: `Transactions across multiple countries (${uniqueLocations.slice(0, 3).join(', ')}) within days`
+          });
+        }
+        
+        // Cross-border activity
+        if (result.transactions.some(tx => tx.senderLocation !== tx.recipientLocation)) {
+          result.riskFactors.push({
+            factor: 'Cross-Border Activity', 
+            severity: 'High',
+            description: 'High volume of international wire transfers to various jurisdictions'
+          });
+        }
+      }
+      
+      // Add some additional calculated fields to customer data
+      if (result.customerDetails) {
+        result.customerDetails.totalTransactions = result.transactions.length;
+        result.customerDetails.averageTransactionAmount = result.transactions.length > 0 ? 
+          result.transactions.reduce((sum, tx) => sum + tx.amount, 0) / result.transactions.length : 0;
+        result.customerDetails.lastActivity = result.transactions.length > 0 ? 
+          new Date(result.transactions[0].date).toISOString().split('T')[0] : 'N/A';
+        result.customerDetails.accountCreationDate = '2022-01-15'; // This would ideally come from the API too
+      }
+      
+      return result;
+    } catch (error) {
+      console.error("Error processing API data:", error);
+      
+      // Return a minimal fallback structure with error information
+      return {
+        customerDetails: {
+          customerId: customerId,
+          customerName: 'Data Processing Error',
+          email: 'error@processing.data',
+          phone: 'N/A',
+          riskScore: 0,
+          accountCreationDate: 'N/A',
+          lastActivity: 'N/A',
+          totalTransactions: 0,
+          averageTransactionAmount: 0
+        },
+        transactions: [],
+        locations: [],
+        riskFactors: [{
+          factor: 'Data Processing Error', 
+          severity: 'High',
+          description: 'Failed to process API data. See console for details.'
+        }]
+      };
     }
   };
 
@@ -229,7 +338,7 @@ const CustomerSearch = () => {
   return (
     <div className="customer-search-container">
       <div className="search-header">
-        <h1>Customer Analysis</h1>
+        <h1>AML Customer Analysis</h1>
         <Link to="/" className="back-button">Back to Dashboard</Link>
       </div>
 
@@ -242,12 +351,12 @@ const CustomerSearch = () => {
               id="customerId"
               value={customerId}
               onChange={(e) => setCustomerId(e.target.value)}
-              placeholder="e.g. C10048"
+              placeholder="e.g. C10045"
               required
             />
           </div>
           <button type="submit" className="search-button" disabled={loading}>
-            {loading ? 'Searching...' : 'Analyze Customer'}
+            {loading ? 'Analyzing...' : 'Analyze Customer'}
           </button>
         </form>
         {error && <div className="error-message">{error}</div>}
@@ -269,6 +378,10 @@ const CustomerSearch = () => {
               <div className="profile-item">
                 <span className="label">Email:</span>
                 <span className="value">{customerData.email}</span>
+              </div>
+              <div className="profile-item">
+                <span className="label">Phone:</span>
+                <span className="value">{customerData.phone}</span>
               </div>
               <div className="profile-item">
                 <span className="label">Risk Score:</span>
@@ -313,63 +426,71 @@ const CustomerSearch = () => {
 
           <div className="transaction-history section">
             <h2>Recent Transactions</h2>
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Transaction ID</th>
-                    <th>Date & Time</th>
-                    <th>Amount</th>
-                    <th>Type</th>
-                    <th>{transactionHistory[0]?.type === 'Outgoing' ? 'Recipient' : 'Sender'}</th>
-                    <th>Location</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactionHistory.map((transaction) => (
-                    <tr key={transaction.transactionId}>
-                      <td>{transaction.transactionId}</td>
-                      <td>{formatDate(transaction.date)}</td>
-                      <td className={transaction.type === 'Outgoing' ? 'amount-out' : 'amount-in'}>
-                        {transaction.type === 'Outgoing' ? '- ' : '+ '}
-                        {formatCurrency(transaction.amount)}
-                      </td>
-                      <td>{transaction.type}</td>
-                      <td>
-                        {transaction.type === 'Outgoing' 
-                          ? `${transaction.recipientName} (${transaction.recipientId})` 
-                          : `${transaction.senderName} (${transaction.senderId})`}
-                      </td>
-                      <td>{transaction.location}</td>
+            {transactionHistory.length > 0 ? (
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Transaction ID</th>
+                      <th>Date & Time</th>
+                      <th>Amount</th>
+                      <th>Type</th>
+                      <th>{transactionHistory[0]?.type === 'Outgoing' ? 'Recipient' : 'Sender'}</th>
+                      <th>Location</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {transactionHistory.map((transaction) => (
+                      <tr key={transaction.transactionId}>
+                        <td>{transaction.transactionId}</td>
+                        <td>{formatDate(transaction.date)}</td>
+                        <td className={transaction.type === 'Outgoing' ? 'amount-out' : 'amount-in'}>
+                          {transaction.type === 'Outgoing' ? '- ' : '+ '}
+                          {formatCurrency(transaction.amount)}
+                        </td>
+                        <td>{transaction.type}</td>
+                        <td>
+                          {transaction.type === 'Outgoing' 
+                            ? `${transaction.recipientId} (${transaction.recipientLocation})` 
+                            : `${transaction.senderId} (${transaction.senderLocation})`}
+                        </td>
+                        <td>{transaction.type === 'Outgoing' ? transaction.recipientLocation : transaction.senderLocation}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="no-data-message">No transaction history available.</p>
+            )}
           </div>
 
           <div className="location-history section">
             <h2>Location Activity</h2>
-            <div className="table-container">
-              <table className="data-table">
-                <thead>
-                  <tr>
-                    <th>Date & Time</th>
-                    <th>Location</th>
-                    <th>Activity</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {locationHistory.map((location, index) => (
-                    <tr key={index}>
-                      <td>{formatDate(location.date)}</td>
-                      <td>{location.location}</td>
-                      <td>{location.activity}</td>
+            {locationHistory.length > 0 ? (
+              <div className="table-container">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Date & Time</th>
+                      <th>Location</th>
+                      <th>Activity</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {locationHistory.map((location, index) => (
+                      <tr key={index}>
+                        <td>{formatDate(location.date)}</td>
+                        <td>{location.location}</td>
+                        <td>{location.activity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="no-data-message">No location history available.</p>
+            )}
           </div>
         </div>
       )}
